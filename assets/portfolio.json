@@ -1,0 +1,37 @@
+[
+    {
+        "symbol": "TVBETETF",
+        "shares": 3541,
+        "avgBuyPrice": 27.1368
+    },
+    {
+        "symbol": "SNG",
+        "shares": 2150,
+        "avgBuyPrice": 5.0343
+    },
+    {
+        "symbol": "SNP",
+        "shares": 21555,
+        "avgBuyPrice": 0.60
+    },
+    {
+        "symbol": "TLV",
+        "shares": 593,
+        "avgBuyPrice": 17.35
+    },
+    {
+        "symbol": "SNN",
+        "shares": 325,
+        "avgBuyPrice": 45.20
+    },
+    {
+        "symbol": "H2O",
+        "shares": 109,
+        "avgBuyPrice": 124.0446
+    },
+    {
+        "symbol": "SMTL",
+        "shares": 40,
+        "avgBuyPrice": 57.0611
+    }
+]

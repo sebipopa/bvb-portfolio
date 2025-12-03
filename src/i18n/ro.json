@@ -1,0 +1,46 @@
+{
+  "portfolio": {
+    "title": "Portofoliul meu",
+    "totalValue": "Valoare totală",
+    "totalGainLoss": "Profit/Pierdere",
+    "noData": "Nu au fost încărcate date",
+    "sortByValue": "După valoare",
+    "sortByName": "După nume",
+    "sortByCustom": "Personalizat"
+  },
+  "stock": {
+    "shares": "Acțiuni",
+    "avgBuyPrice": "Preț mediu cumpărare",
+    "currentPrice": "Preț curent",
+    "totalValue": "Valoare totală",
+    "gainLoss": "Profit/Pierdere",
+    "chart": "Grafic (în curând)",
+    "viewTransactions": "Vezi tranzacții",
+    "price": "Preț",
+    "summary": "Sumar",
+    "investment": "Investiție"
+  },
+  "transaction": {
+    "title": "Tranzacții",
+    "addTransaction": "Adaugă tranzacție",
+    "quantity": "Cantitate",
+    "quantityPlaceholder": "Numărul de acțiuni",
+    "pricePerShare": "Preț per acțiune",
+    "pricePlaceholder": "Preț (RON)",
+    "notes": "Note (opțional)",
+    "notesPlaceholder": "Adaugă note...",
+    "buy": "CUM",
+    "sell": "VINDE",
+    "cancel": "Anulează",
+    "add": "Adaugă",
+    "delete": "Șterge",
+    "noTransactions": "Fără tranzacții",
+    "areYouSure": "Ești sigur?"
+  },
+  "common": {
+    "loading": "Se încarcă...",
+    "error": "Eroare",
+    "back": "Înapoi",
+    "refresh": "Reîncărcare"
+  }
+}

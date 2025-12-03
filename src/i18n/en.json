@@ -1,0 +1,46 @@
+{
+  "portfolio": {
+    "title": "My Portfolio",
+    "totalValue": "Total Value",
+    "totalGainLoss": "Gain/Loss",
+    "noData": "No data loaded",
+    "sortByValue": "By Value",
+    "sortByName": "By Name",
+    "sortByCustom": "Custom"
+  },
+  "stock": {
+    "shares": "Shares",
+    "avgBuyPrice": "Avg Buy Price",
+    "currentPrice": "Current Price",
+    "totalValue": "Total Value",
+    "gainLoss": "Gain/Loss",
+    "chart": "Chart (Coming soon)",
+    "viewTransactions": "View Transactions",
+    "price": "Price",
+    "summary": "Summary",
+    "investment": "Investment"
+  },
+  "transaction": {
+    "title": "Transactions",
+    "addTransaction": "Add Transaction",
+    "quantity": "Quantity",
+    "quantityPlaceholder": "Number of shares",
+    "pricePerShare": "Price per Share",
+    "pricePlaceholder": "Price (RON)",
+    "notes": "Notes (Optional)",
+    "notesPlaceholder": "Add notes...",
+    "buy": "BUY",
+    "sell": "SELL",
+    "cancel": "Cancel",
+    "add": "Add",
+    "delete": "Delete",
+    "noTransactions": "No transactions",
+    "areYouSure": "Are you sure?"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "back": "Back",
+    "refresh": "Refresh"
+  }
+}

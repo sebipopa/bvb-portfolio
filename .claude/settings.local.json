@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/sebi/mobile/bvb-portfolio log --oneline -10)",
+      "Bash(npx tsc:*)",
+      "Bash(npx expo start --clear)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -39,6 +39,11 @@ import DraggableFlatList, {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { saveCustomSortOrder, loadCustomSortOrder } from '@/src/services/sortOrderService';
 import { addMockTransactions } from '@/src/services/mockDataService';
+import { ExchangeBadge } from '@/src/components/ExchangeBadge';
+import { parseSymbol } from '@/src/services/exchangeService';
+import { useCurrency } from '@/src/context/CurrencyContext';
+import { DisplayCurrency } from '@/src/services/currencyService';
+import { getStockPrice } from '@/src/services/marketDataApi';
 
 type SortOption = 'value-desc' | 'name-asc' | 'custom';
 
@@ -375,6 +380,7 @@ export default function PortfolioScreen() {
   const insets = useSafeAreaInsets();
   const { stocks, summary, loading, error, refresh, addTransaction } = usePortfolio();
   const { language, setLanguage } = useLanguage();
+  const { displayCurrency, setDisplayCurrency, formatWithSymbol } = useCurrency();
   const [refreshing, setRefreshing] = React.useState(false);
   const [sortOption, setSortOption] = React.useState<SortOption>('value-desc');
   const [customOrder, setCustomOrder] = React.useState<string[]>([]);
@@ -382,6 +388,7 @@ export default function PortfolioScreen() {
   // Add holding modal state
   const [modalVisible, setModalVisible] = React.useState(false);
   const [symbol, setSymbol] = React.useState('');
+  const [exchange, setExchange] = React.useState<'BVB' | 'L'>('BVB');
   const [transactionType, setTransactionType] = React.useState<'BUY' | 'SELL'>('BUY');
   const [quantity, setQuantity] = React.useState('');
   const [price, setPrice] = React.useState('');
@@ -396,6 +403,25 @@ export default function PortfolioScreen() {
     });
   }, []);
 
+  // Fetch current price when symbol or exchange changes
+  React.useEffect(() => {
+    const fetchCurrentPrice = async () => {
+      if (symbol.trim() && modalVisible) {
+        try {
+          const symbolUpper = symbol.toUpperCase().trim();
+          const fullSymbol = `${symbolUpper}.${exchange}`;
+          const priceData = await getStockPrice(fullSymbol);
+          if (priceData.currentPrice > 0) {
+            setPrice(priceData.currentPrice.toString());
+          }
+        } catch (error) {
+          console.log('Could not fetch price for symbol:', symbol);
+        }
+      }
+    };
+    fetchCurrentPrice();
+  }, [symbol, exchange, modalVisible]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await refresh();
@@ -404,6 +430,14 @@ export default function PortfolioScreen() {
 
   const handleLanguageSwitch = () => {
     setLanguage(language === 'ro' ? 'en' : 'ro');
+  };
+
+  const handleCurrencySwitch = () => {
+    const currencies: DisplayCurrency[] = ['RON', 'USD', 'EUR'];
+    const currentIndex = currencies.indexOf(displayCurrency);
+    const nextIndex = (currentIndex + 1) % currencies.length;
+    const newCurrency = currencies[nextIndex];
+    setDisplayCurrency(newCurrency);
   };
 
   const handleStockPress = (symbolValue: string) => {
@@ -420,16 +454,18 @@ export default function PortfolioScreen() {
       const qty = parseFloat(quantity);
       const priceVal = parseFloat(price);
       const symbolUpper = symbol.toUpperCase().trim();
+      const fullSymbol = `${symbolUpper}.${exchange}`;
 
       if (qty <= 0 || priceVal <= 0) {
         Alert.alert('Error', 'Quantity and price must be greater than 0');
         return;
       }
 
-      await addTransaction(symbolUpper, transactionType, qty, priceVal, notes || undefined);
+      await addTransaction(fullSymbol, transactionType, qty, priceVal, notes || undefined);
 
       // Reset form
       setSymbol('');
+      setExchange('BVB');
       setQuantity('');
       setPrice('');
       setNotes('');
@@ -444,6 +480,7 @@ export default function PortfolioScreen() {
 
   const handleCloseModal = () => {
     setSymbol('');
+    setExchange('BVB');
     setQuantity('');
     setPrice('');
     setNotes('');
@@ -495,14 +532,6 @@ export default function PortfolioScreen() {
     );
   };
 
-
-  const formatCurrency = (value: number, includeRon: boolean = true): string => {
-    const parts = value.toFixed(2).split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    const decimalPart = parts[1];
-    const formatted = `${integerPart},${decimalPart}`;
-    return includeRon ? `${formatted} RON` : formatted;
-  };
 
   const formatPercentage = (value: number): string => {
     const sign = value >= 0 ? '+' : '';
@@ -572,16 +601,19 @@ export default function PortfolioScreen() {
 
             {/* Left side: Symbol and shares/price */}
             <View style={{ flex: 0.4 }}>
-              <Text style={styles.stockSymbol}>{stock.symbol}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.stockSymbol}>{parseSymbol(stock.symbol).symbol}</Text>
+                <ExchangeBadge symbol={stock.symbol} size="small" />
+              </View>
               <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                {stock.shares} | {formatCurrency(stock.currentPrice)}
+                {stock.shares} | {formatWithSymbol(stock.currentPrice)}
               </Text>
             </View>
 
             {/* Right side: Total value and gain/loss */}
             <View style={{ flex: 0.6, alignItems: 'flex-end' }}>
               <Text style={[styles.stockSymbol, { fontSize: 16 }]}>
-                {formatCurrency(stock.totalValue)}
+                {formatWithSymbol(stock.totalValue)}
               </Text>
               <Text
                 style={[
@@ -591,7 +623,7 @@ export default function PortfolioScreen() {
                     : { color: '#f44336', fontWeight: '600' },
                 ]}
               >
-                {formatCurrency(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
+                {formatWithSymbol(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
               </Text>
             </View>
           </View>
@@ -794,18 +826,25 @@ export default function PortfolioScreen() {
       <View style={[styles.header]}>
         <View style={styles.headerTop}>
           <Text style={styles.headerTitle}>{t('portfolio.title', language)}</Text>
-          <TouchableOpacity onPress={handleLanguageSwitch}>
-            <Text style={{ fontSize: 20 }}>
-              {language === 'ro' ? '🇷🇴' : '🇬🇧'}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <TouchableOpacity onPress={handleCurrencySwitch}>
+              <Text style={{ fontSize: 16, fontWeight: '600', color: '#2196f3' }}>
+                {displayCurrency}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLanguageSwitch}>
+              <Text style={{ fontSize: 20 }}>
+                {language === 'ro' ? '🇷🇴' : '🇬🇧'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {summary && (
           <>
             <View style={{ marginBottom: 16 }}>
               <Text style={styles.summaryLabel}>{t('portfolio.totalValue', language)}</Text>
               <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#000', marginTop: 4 }}>
-                {formatCurrency(summary.totalValue)}
+                {formatWithSymbol(summary.totalValue)}
               </Text>
             </View>
             <View>
@@ -816,7 +855,7 @@ export default function PortfolioScreen() {
                   summary.totalGainLoss >= 0 ? { color: '#4caf50' } : { color: '#f44336' },
                 ]}
               >
-                {formatCurrency(summary.totalGainLoss)} ({formatPercentage(summary.totalGainLossPercentage)})
+                {formatWithSymbol(summary.totalGainLoss)} ({formatPercentage(summary.totalGainLossPercentage)})
               </Text>
             </View>
           </>
@@ -873,16 +912,19 @@ export default function PortfolioScreen() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 {/* Left side: Symbol and shares/price (40%) */}
                 <View style={{ flex: 0.4 }}>
-                  <Text style={styles.stockSymbol}>{stock.symbol}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.stockSymbol}>{parseSymbol(stock.symbol).symbol}</Text>
+                    <ExchangeBadge symbol={stock.symbol} size="small" />
+                  </View>
                   <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                    {stock.shares} | {formatCurrency(stock.currentPrice)}
+                    {stock.shares} | {formatWithSymbol(stock.currentPrice)}
                   </Text>
                 </View>
 
                 {/* Right side: Total value and gain/loss (60%) */}
                 <View style={{ flex: 0.6, alignItems: 'flex-end' }}>
                   <Text style={[styles.stockSymbol, { fontSize: 16 }]}>
-                    {formatCurrency(stock.totalValue)}
+                    {formatWithSymbol(stock.totalValue)}
                   </Text>
                   <Text
                     style={[
@@ -892,7 +934,7 @@ export default function PortfolioScreen() {
                         : { color: '#f44336', fontWeight: '600' },
                     ]}
                   >
-                    {formatCurrency(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
+                    {formatWithSymbol(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
                   </Text>
                 </View>
               </View>
@@ -918,13 +960,52 @@ export default function PortfolioScreen() {
                 <Text style={styles.inputLabel}>Stock Symbol</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g., BVB, OMV, ING"
+                  placeholder="e.g., SNG, CSPX, VUSA"
                   keyboardType="default"
                   value={symbol}
                   onChangeText={setSymbol}
                   placeholderTextColor="#999"
                   autoCapitalize="characters"
                 />
+              </View>
+
+              {/* Exchange Selector */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Exchange</Text>
+                <View style={styles.typeSelector}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      exchange === 'BVB' && { borderColor: '#2196f3', backgroundColor: '#e3f2fd' },
+                    ]}
+                    onPress={() => setExchange('BVB')}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        exchange === 'BVB' && { color: '#2196f3' },
+                      ]}
+                    >
+                      BVB (RON)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      exchange === 'L' && { borderColor: '#f44336', backgroundColor: '#ffebee' },
+                    ]}
+                    onPress={() => setExchange('L')}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        exchange === 'L' && { color: '#f44336' },
+                      ]}
+                    >
+                      London (GBP)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Transaction Type Selector */}

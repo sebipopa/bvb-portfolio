@@ -33,9 +33,12 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePortfolio } from '@/src/hooks/usePortfolio';
 import { useLanguage } from '@/src/context/LanguageContext';
+import { useCurrency } from '@/src/context/CurrencyContext';
 import { t } from '@/src/i18n';
 import { Transaction } from '@/src/types/Stock';
-import { getCachedTimestamp, clearPriceCache } from '@/src/services/bvbApi';
+import { getCachedTimestamp, clearPriceCache } from '@/src/services/marketDataApi';
+import { ExchangeBadge } from '@/src/components/ExchangeBadge';
+import { parseSymbol } from '@/src/services/exchangeService';
 
 const styles = StyleSheet.create({
   container: {
@@ -372,6 +375,7 @@ export default function StockDetailScreen() {
   const { symbol } = useLocalSearchParams();
   const { stocks, loading, getTransactionsBySymbol, deleteTransaction, addTransaction, refresh, deleteStock } = usePortfolio();
   const { language } = useLanguage();
+  const { formatWithSymbol } = useCurrency();
 
   // Find the stock in the portfolio
   const stock = stocks.find((s) => s.symbol === symbol);
@@ -502,17 +506,16 @@ export default function StockDetailScreen() {
     );
   };
 
-  const formatCurrency = (value: number, includeRon: boolean = true): string => {
-    const parts = value.toFixed(2).split('.');
-    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    const decimalPart = parts[1];
-    const formatted = `${integerPart},${decimalPart}`;
-    return includeRon ? `${formatted} RON` : formatted;
-  };
-
   const formatPercentage = (value: number): string => {
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(2)}%`;
+  };
+
+  const formatNumber = (value: number): string => {
+    const parts = value.toFixed(2).split('.');
+    const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalPart = parts[1];
+    return `${integerPart},${decimalPart}`;
   };
 
   const formatDate = (timestamp: number): string => {
@@ -566,9 +569,12 @@ export default function StockDetailScreen() {
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={{ fontSize: 24, color: '#2196f3' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#000' }}>
-          {stock.symbol}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#000' }}>
+            {parseSymbol(stock.symbol).symbol}
+          </Text>
+          <ExchangeBadge symbol={stock.symbol} size="medium" />
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
@@ -578,7 +584,7 @@ export default function StockDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('stock.totalValue', language)}</Text>
           <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#000', marginBottom: 8 }}>
-            {formatCurrency(stock.totalValue)}
+            {formatWithSymbol(stock.totalValue)}
           </Text>
           <Text
             style={[
@@ -586,10 +592,10 @@ export default function StockDetailScreen() {
               stock.gainLossValue >= 0 ? { color: '#4caf50' } : { color: '#f44336' },
             ]}
           >
-            {formatCurrency(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
+            {formatWithSymbol(stock.gainLossValue)} ({formatPercentage(stock.gainLossPercentage)})
           </Text>
           <Text style={{ fontSize: 12, color: '#666' }}>
-            {stock.shares} {language === 'ro' ? 'acțiuni' : 'shares'} | {formatCurrency(stock.currentPrice)}
+            {stock.shares} {language === 'ro' ? 'acțiuni' : 'shares'} | {formatWithSymbol(stock.currentPrice)}
           </Text>
           {cachedTimestamp && (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 8 }}>
@@ -617,18 +623,18 @@ export default function StockDetailScreen() {
 
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>{t('stock.avgBuyPrice', language)}</Text>
-            <Text style={styles.metricValue}>{formatCurrency(stock.avgBuyPrice)}</Text>
+            <Text style={styles.metricValue}>{formatWithSymbol(stock.avgBuyPrice)}</Text>
           </View>
 
           <View style={styles.metricRow}>
             <Text style={styles.metricLabel}>{t('stock.currentPrice', language)}</Text>
-            <Text style={styles.metricValue}>{formatCurrency(stock.currentPrice)}</Text>
+            <Text style={styles.metricValue}>{formatWithSymbol(stock.currentPrice)}</Text>
           </View>
 
           <View style={[styles.metricRow, styles.metricRowLast]}>
             <Text style={styles.metricLabel}>{t('stock.investment', language)}</Text>
             <Text style={styles.metricValue}>
-              {formatCurrency(stock.shares * stock.avgBuyPrice)}
+              {formatWithSymbol(stock.shares * stock.avgBuyPrice)}
             </Text>
           </View>
         </View>
@@ -658,7 +664,7 @@ export default function StockDetailScreen() {
                           : styles.transactionTypeSell,
                       ]}
                     >
-                      {t(`transaction.${item.type.toLowerCase()}`, language).toUpperCase()} {item.quantity} @ {formatCurrency(item.price, false)}
+                      {t(`transaction.${item.type.toLowerCase()}`, language).toUpperCase()} {item.quantity} @ {formatNumber(item.price)}
                     </Text>
                     <Text style={styles.transactionDate}>{formatDate(item.date)}</Text>
                     {item.notes && (
@@ -668,7 +674,7 @@ export default function StockDetailScreen() {
                     )}
                   </View>
                   <Text style={styles.transactionValue}>
-                    {formatCurrency(item.quantity * item.price, false)}
+                    {formatNumber(item.quantity * item.price)}
                   </Text>
                   <TouchableOpacity
                     style={styles.deleteButton}

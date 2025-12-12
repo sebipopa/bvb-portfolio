@@ -5,6 +5,7 @@
  * Supports:
  * - BVB (Bucharest Stock Exchange) - web scraping
  * - LSE (London Stock Exchange) - Yahoo Finance API
+ * - CRYPTO (Cryptocurrency) - CoinGecko API
  */
 
 import { StockMarketData } from '../types/Stock';
@@ -44,6 +45,9 @@ export async function getStockPrice(fullSymbol: string): Promise<StockMarketData
       break;
     case 'L':
       result = await fetchLondonPrice(parsed.symbol, parsed.fullSymbol);
+      break;
+    case 'CRYPTO':
+      result = await fetchCryptoPrice(parsed.symbol, parsed.fullSymbol);
       break;
     default:
       throw new Error(`Unsupported exchange: ${parsed.exchange}`);
@@ -121,6 +125,94 @@ async function fetchBvbPrice(symbol: string, fullSymbol: string): Promise<StockM
     };
   } catch (error) {
     console.error(`Error fetching BVB price for ${symbol}:`, error);
+    return {
+      symbol: fullSymbol,
+      currentPrice: 0,
+      currency: exchangeInfo.currency,
+      lastUpdate: now,
+    };
+  }
+}
+
+/**
+ * Map common cryptocurrency symbols to CoinGecko IDs
+ * CoinGecko uses specific IDs for each cryptocurrency
+ */
+const CRYPTO_ID_MAP: Record<string, string> = {
+  BTC: 'bitcoin',
+  ETH: 'ethereum',
+  ADA: 'cardano',
+  SOL: 'solana',
+  DOT: 'polkadot',
+  MATIC: 'matic-network',
+  AVAX: 'avalanche-2',
+  LINK: 'chainlink',
+  UNI: 'uniswap',
+  XRP: 'ripple',
+  DOGE: 'dogecoin',
+  SHIB: 'shiba-inu',
+  BNB: 'binancecoin',
+  USDT: 'tether',
+  USDC: 'usd-coin',
+};
+
+/**
+ * Fetch price from CoinGecko API for cryptocurrency
+ * Always returns prices in USD
+ */
+async function fetchCryptoPrice(symbol: string, fullSymbol: string): Promise<StockMarketData> {
+  const now = Date.now();
+  const exchangeInfo = getExchangeInfo('CRYPTO');
+
+  try {
+    // Map symbol to CoinGecko ID (lowercase)
+    const coinId = CRYPTO_ID_MAP[symbol.toUpperCase()] || symbol.toLowerCase();
+
+    // CoinGecko API endpoint (no API key required for basic usage)
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.warn(`⚠️ CoinGecko API returned ${response.status} for ${symbol}`);
+      return {
+        symbol: fullSymbol,
+        currentPrice: 0,
+        currency: exchangeInfo.currency,
+        lastUpdate: now,
+      };
+    }
+
+    const data = await response.json();
+
+    // Extract USD price from response
+    const currentPrice = data?.[coinId]?.usd;
+
+    if (!currentPrice || isNaN(currentPrice) || currentPrice <= 0) {
+      console.warn(`⚠️ Could not extract price from CoinGecko for ${symbol}. Check if '${coinId}' is a valid CoinGecko ID.`);
+      return {
+        symbol: fullSymbol,
+        currentPrice: 0,
+        currency: exchangeInfo.currency,
+        lastUpdate: now,
+      };
+    }
+
+    console.log(`✅ Successfully fetched ${symbol}: $${currentPrice} USD`);
+
+    return {
+      symbol: fullSymbol,
+      currentPrice,
+      currency: 'USD', // Always USD for crypto
+      lastUpdate: now,
+    };
+  } catch (error) {
+    console.error(`❌ Error fetching crypto price for ${symbol}:`, error);
     return {
       symbol: fullSymbol,
       currentPrice: 0,

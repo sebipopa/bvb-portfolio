@@ -3,10 +3,10 @@
  * Handles parsing and formatting of multi-exchange stock symbols
  *
  * Symbol format: SYMBOL.EXCHANGE
- * Examples: SNG.BVB, CSPX.L
+ * Examples: SNG.BVB, CSPX.L, BTC.CRYPTO
  */
 
-export type ExchangeCode = 'BVB' | 'L';
+export type ExchangeCode = 'BVB' | 'L' | 'CRYPTO';
 
 export interface ExchangeInfo {
   code: ExchangeCode;
@@ -16,9 +16,9 @@ export interface ExchangeInfo {
 }
 
 export interface ParsedSymbol {
-  symbol: string;      // e.g., "SNG"
-  exchange: ExchangeCode; // e.g., "BVB"
-  fullSymbol: string;  // e.g., "SNG.BVB"
+  symbol: string;      // e.g., "SNG", "BTC"
+  exchange: ExchangeCode; // e.g., "BVB", "CRYPTO"
+  fullSymbol: string;  // e.g., "SNG.BVB", "BTC.CRYPTO"
 }
 
 /**
@@ -36,6 +36,12 @@ export const EXCHANGES: Record<ExchangeCode, ExchangeInfo> = {
     name: 'London Stock Exchange',
     currency: 'USD', // Yahoo Finance returns prices in USD
     countryCode: 'GB',
+  },
+  CRYPTO: {
+    code: 'CRYPTO',
+    name: 'Cryptocurrency',
+    currency: 'USD', // Crypto prices fetched in USD
+    countryCode: 'GLOBAL',
   },
 };
 

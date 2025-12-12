@@ -388,7 +388,7 @@ export default function PortfolioScreen() {
   // Add holding modal state
   const [modalVisible, setModalVisible] = React.useState(false);
   const [symbol, setSymbol] = React.useState('');
-  const [exchange, setExchange] = React.useState<'BVB' | 'L'>('BVB');
+  const [exchange, setExchange] = React.useState<'BVB' | 'L' | 'CRYPTO'>('BVB');
   const [transactionType, setTransactionType] = React.useState<'BUY' | 'SELL'>('BUY');
   const [quantity, setQuantity] = React.useState('');
   const [price, setPrice] = React.useState('');
@@ -957,10 +957,10 @@ export default function PortfolioScreen() {
 
               {/* Symbol Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Stock Symbol</Text>
+                <Text style={styles.inputLabel}>Symbol</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g., SNG, CSPX, VUSA"
+                  placeholder="e.g., SNG, CSPX, BTC, ADA"
                   keyboardType="default"
                   value={symbol}
                   onChangeText={setSymbol}
@@ -986,7 +986,7 @@ export default function PortfolioScreen() {
                         exchange === 'BVB' && { color: '#2196f3' },
                       ]}
                     >
-                      BVB (RON)
+                      BVB
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -1002,7 +1002,23 @@ export default function PortfolioScreen() {
                         exchange === 'L' && { color: '#f44336' },
                       ]}
                     >
-                      London (GBP)
+                      London
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      exchange === 'CRYPTO' && { borderColor: '#ff9800', backgroundColor: '#fff3e0' },
+                    ]}
+                    onPress={() => setExchange('CRYPTO')}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        exchange === 'CRYPTO' && { color: '#ff9800' },
+                      ]}
+                    >
+                      Crypto
                     </Text>
                   </TouchableOpacity>
                 </View>

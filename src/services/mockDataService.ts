@@ -172,6 +172,55 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     date: new Date('2024-03-01').getTime(),
     notes: 'S&P 500 tracker',
   },
+
+  // BTC.CRYPTO - Bitcoin (Cryptocurrency)
+  {
+    symbol: 'BTC.CRYPTO',
+    type: 'BUY',
+    quantity: 0.15,
+    price: 42000.00,
+    date: new Date('2024-01-10').getTime(),
+    notes: 'First Bitcoin purchase',
+  },
+  {
+    symbol: 'BTC.CRYPTO',
+    type: 'BUY',
+    quantity: 0.08,
+    price: 58000.00,
+    date: new Date('2024-03-15').getTime(),
+    notes: 'DCA into BTC',
+  },
+  {
+    symbol: 'BTC.CRYPTO',
+    type: 'BUY',
+    quantity: 0.12,
+    price: 67000.00,
+    date: new Date('2024-06-20').getTime(),
+  },
+
+  // ADA.CRYPTO - Cardano (Cryptocurrency)
+  {
+    symbol: 'ADA.CRYPTO',
+    type: 'BUY',
+    quantity: 5000,
+    price: 0.48,
+    date: new Date('2024-02-05').getTime(),
+    notes: 'Cardano accumulation',
+  },
+  {
+    symbol: 'ADA.CRYPTO',
+    type: 'BUY',
+    quantity: 3000,
+    price: 0.52,
+    date: new Date('2024-04-12').getTime(),
+  },
+  {
+    symbol: 'ADA.CRYPTO',
+    type: 'BUY',
+    quantity: 2000,
+    price: 0.61,
+    date: new Date('2024-07-08').getTime(),
+  },
 ];
 
 /**

@@ -3,7 +3,11 @@
     "allow": [
       "Bash(git -C /Users/sebi/mobile/bvb-portfolio log --oneline -10)",
       "Bash(npx tsc:*)",
-      "Bash(npx expo start --clear)"
+      "Bash(npx expo start --clear)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []

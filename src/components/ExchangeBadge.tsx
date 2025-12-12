@@ -13,8 +13,9 @@ interface ExchangeBadgeProps {
 }
 
 const EXCHANGE_COLORS = {
-  BVB: '#2196f3', // Blue for BVB
-  L: '#f44336',   // Red for London
+  BVB: '#2196f3',   // Blue for BVB
+  L: '#f44336',     // Red for London
+  CRYPTO: '#ff9800', // Orange for Crypto
 };
 
 export function ExchangeBadge({ symbol, size = 'small' }: ExchangeBadgeProps) {

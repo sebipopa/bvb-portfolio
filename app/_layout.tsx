@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { PortfolioProvider } from '@/src/context/PortfolioContext';
 import { LanguageProvider } from '@/src/context/LanguageContext';
+import { CurrencyProvider } from '@/src/context/CurrencyContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -17,18 +18,20 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <LanguageProvider>
-        <PortfolioProvider>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen name="index" />
-            <Stack.Screen name="stock/[symbol]" />
-            <Stack.Screen name="transactions/[symbol]" />
-          </Stack>
-          <StatusBar style="auto" />
-        </PortfolioProvider>
+        <CurrencyProvider>
+          <PortfolioProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="stock/[symbol]" />
+              <Stack.Screen name="transactions/[symbol]" />
+            </Stack>
+            <StatusBar style="auto" />
+          </PortfolioProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

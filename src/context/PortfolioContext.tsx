@@ -12,7 +12,7 @@
 
 import React, { createContext, useEffect, useState, useCallback } from 'react';
 import { PortfolioItem, StockMetrics, PortfolioSummary, Transaction } from '../types/Stock';
-import { getBvbPrices } from '../services/bvbApi';
+import { getStockPrices } from '../services/marketDataApi';
 import {
   loadTransactions,
   addTransaction as serviceAddTransaction,
@@ -20,6 +20,7 @@ import {
   deleteAllTransactionsBySymbol as serviceDeleteAllTransactionsBySymbol,
   calculateMetricsFromTransactions,
 } from '../services/transactionService';
+import { useCurrency } from './CurrencyContext';
 
 interface PortfolioContextType {
   stocks: StockMetrics[];
@@ -47,22 +48,33 @@ interface PortfolioProviderProps {
 
 /**
  * Calculate portfolio metrics for a single stock from transactions
+ * All monetary values are converted to the display currency
  */
 function calculateStockMetrics(
   symbol: string,
   transactions: Transaction[],
-  currentPrice: number
+  currentPrice: number,
+  currency: string,
+  displayCurrency: string,
+  convertFn: (amount: number, from: string, to?: string) => number
 ): StockMetrics {
   const metrics = calculateMetricsFromTransactions(transactions, currentPrice);
+
+  // Convert all monetary values to display currency
+  const convertedCurrentPrice = convertFn(currentPrice, currency, displayCurrency);
+  const convertedAvgBuyPrice = convertFn(metrics.avgBuyPrice, currency, displayCurrency);
+  const convertedTotalValue = convertFn(metrics.totalValue, currency, displayCurrency);
+  const convertedGainLossValue = convertFn(metrics.gainLossValue, currency, displayCurrency);
 
   return {
     symbol,
     shares: metrics.totalShares,
-    avgBuyPrice: metrics.avgBuyPrice,
-    currentPrice,
-    totalValue: metrics.totalValue,
-    gainLossValue: metrics.gainLossValue,
-    gainLossPercentage: metrics.gainLossPercentage,
+    avgBuyPrice: convertedAvgBuyPrice,
+    currentPrice: convertedCurrentPrice,
+    currency: displayCurrency, // Always use display currency
+    totalValue: convertedTotalValue,
+    gainLossValue: convertedGainLossValue,
+    gainLossPercentage: metrics.gainLossPercentage, // Percentage stays the same
     lastUpdate: Date.now(),
   };
 }
@@ -90,6 +102,9 @@ export function PortfolioProvider({ children }: PortfolioProviderProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // Get currency context for conversion
+  const { displayCurrency, convert } = useCurrency();
 
   /**
    * Fetch portfolio data and prices
@@ -120,24 +135,30 @@ export function PortfolioProvider({ children }: PortfolioProviderProps) {
         transactionsBySymbol.get(tx.symbol)!.push(tx);
       }
 
-      // Fetch current prices from BVB
+      // Fetch current prices from exchanges
       const symbols = Array.from(transactionsBySymbol.keys());
       console.log(`🔍 Fetching prices for ${symbols.length} symbols:`, symbols.join(', '));
-      const priceData = await getBvbPrices(symbols);
+      const priceData = await getStockPrices(symbols);
       console.log(`💰 Received ${priceData.length} prices`);
 
-      // Create price map for easy lookup
-      const priceMap = Object.fromEntries(priceData.map((pd) => [pd.symbol, pd.currentPrice]));
+      // Create price map for easy lookup (includes currency info)
+      const priceMap = Object.fromEntries(
+        priceData.map((pd) => [pd.symbol, { price: pd.currentPrice, currency: pd.currency }])
+      );
 
-      // Calculate metrics for each stock
+      // Calculate metrics for each stock (with currency conversion)
       const metricsArray = symbols
-        .map((symbol) =>
-          calculateStockMetrics(
+        .map((symbol) => {
+          const priceInfo = priceMap[symbol] || { price: 0, currency: 'RON' };
+          return calculateStockMetrics(
             symbol,
             transactionsBySymbol.get(symbol)!,
-            priceMap[symbol] || 0
-          )
-        )
+            priceInfo.price,
+            priceInfo.currency,
+            displayCurrency,
+            convert
+          );
+        })
         .filter((stock) => stock.shares > 0); // Only include stocks with positive shares
 
       console.log(`✅ Portfolio has ${metricsArray.length} stocks with positive shares`);
@@ -153,7 +174,7 @@ export function PortfolioProvider({ children }: PortfolioProviderProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [displayCurrency, convert]);
 
   // Load portfolio on component mount
   useEffect(() => {

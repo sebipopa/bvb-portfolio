@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Transaction } from '../types/Stock';
+import { parseSymbol, isValidSymbolFormat } from './exchangeService';
 import portfolio from '../../assets/portfolio.json';
 
 const TRANSACTIONS_KEY = '@portfolio_transactions';
@@ -62,9 +63,16 @@ export async function addTransaction(
   price: number,
   notes?: string
 ): Promise<Transaction> {
+  // Validate symbol format
+  if (!isValidSymbolFormat(symbol)) {
+    throw new Error(`Invalid symbol format: ${symbol}. Expected format: SYMBOL.EXCHANGE (e.g., SNG.BVB)`);
+  }
+
+  const parsed = parseSymbol(symbol);
+
   const transaction: Transaction = {
     id: generateId(),
-    symbol: symbol.toUpperCase(),
+    symbol: parsed.fullSymbol,
     type,
     quantity,
     price,
@@ -72,7 +80,7 @@ export async function addTransaction(
     notes,
   };
 
-  console.log(`➕ Adding transaction: ${type} ${quantity} ${symbol.toUpperCase()} @ ${price} RON`);
+  console.log(`➕ Adding transaction: ${type} ${quantity} ${parsed.fullSymbol} @ ${price}`);
   const transactions = await loadTransactions();
   transactions.push(transaction);
   await saveTransactions(transactions);
@@ -99,11 +107,19 @@ export async function deleteTransaction(transactionId: string): Promise<void> {
  */
 export async function deleteAllTransactionsBySymbol(symbol: string): Promise<void> {
   const transactions = await loadTransactions();
-  const symbolUpper = symbol.toUpperCase();
-  const toDelete = transactions.filter((t) => t.symbol === symbolUpper);
-  const filtered = transactions.filter((t) => t.symbol !== symbolUpper);
+  let normalizedSymbol: string;
 
-  console.log(`🗑️ Deleting ${toDelete.length} transactions for ${symbolUpper}`);
+  try {
+    const parsed = parseSymbol(symbol);
+    normalizedSymbol = parsed.fullSymbol;
+  } catch {
+    normalizedSymbol = symbol.toUpperCase();
+  }
+
+  const toDelete = transactions.filter((t) => t.symbol === normalizedSymbol);
+  const filtered = transactions.filter((t) => t.symbol !== normalizedSymbol);
+
+  console.log(`🗑️ Deleting ${toDelete.length} transactions for ${normalizedSymbol}`);
   await saveTransactions(filtered);
 }
 
@@ -112,12 +128,22 @@ export async function deleteAllTransactionsBySymbol(symbol: string): Promise<voi
  */
 export async function getTransactionsBySymbol(symbol: string): Promise<Transaction[]> {
   const transactions = await loadTransactions();
-  return transactions.filter((t) => t.symbol === symbol.toUpperCase());
+  let normalizedSymbol: string;
+
+  try {
+    const parsed = parseSymbol(symbol);
+    normalizedSymbol = parsed.fullSymbol;
+  } catch {
+    normalizedSymbol = symbol.toUpperCase();
+  }
+
+  return transactions.filter((t) => t.symbol === normalizedSymbol);
 }
 
 /**
  * Migrate from portfolio.json to transactions
  * Creates BUY transactions from existing portfolio
+ * Note: Legacy function - not used in fresh installs
  */
 export function migrateFromPortfolio(): Transaction[] {
   const now = Date.now();

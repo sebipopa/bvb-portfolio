@@ -8,11 +8,11 @@ import { Transaction } from '../types/Stock';
 
 const TRANSACTIONS_KEY = '@portfolio_transactions';
 
-// Mock transactions data - BVB stocks
+// Mock transactions data - Multi-exchange stocks
 const mockTransactionsData: Omit<Transaction, 'id'>[] = [
-  // TLV - Banca Transilvania (multiple buys)
+  // TLV.BVB - Banca Transilvania (multiple buys)
   {
-    symbol: 'TLV',
+    symbol: 'TLV.BVB',
     type: 'BUY',
     quantity: 300,
     price: 16.50,
@@ -20,7 +20,7 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Initial investment',
   },
   {
-    symbol: 'TLV',
+    symbol: 'TLV.BVB',
     type: 'BUY',
     quantity: 200,
     price: 17.20,
@@ -28,16 +28,16 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Adding to position',
   },
   {
-    symbol: 'TLV',
+    symbol: 'TLV.BVB',
     type: 'BUY',
     quantity: 93,
     price: 18.00,
     date: new Date('2024-06-05').getTime(),
   },
 
-  // SNN - Nuclearelectrica
+  // SNN.BVB - Nuclearelectrica
   {
-    symbol: 'SNN',
+    symbol: 'SNN.BVB',
     type: 'BUY',
     quantity: 250,
     price: 42.00,
@@ -45,16 +45,16 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Energy sector play',
   },
   {
-    symbol: 'SNN',
+    symbol: 'SNN.BVB',
     type: 'BUY',
     quantity: 75,
     price: 46.50,
     date: new Date('2024-05-15').getTime(),
   },
 
-  // SNP - OMV Petrom
+  // SNP.BVB - OMV Petrom
   {
-    symbol: 'SNP',
+    symbol: 'SNP.BVB',
     type: 'BUY',
     quantity: 10000,
     price: 0.55,
@@ -62,14 +62,14 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Large cap dividend play',
   },
   {
-    symbol: 'SNP',
+    symbol: 'SNP.BVB',
     type: 'BUY',
     quantity: 8000,
     price: 0.58,
     date: new Date('2024-01-25').getTime(),
   },
   {
-    symbol: 'SNP',
+    symbol: 'SNP.BVB',
     type: 'BUY',
     quantity: 3555,
     price: 0.62,
@@ -77,7 +77,7 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
   },
   // Sell some SNP
   {
-    symbol: 'SNP',
+    symbol: 'SNP.BVB',
     type: 'SELL',
     quantity: 2000,
     price: 0.65,
@@ -85,9 +85,9 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Taking profits',
   },
 
-  // SNG - Romgaz
+  // SNG.BVB - Romgaz
   {
-    symbol: 'SNG',
+    symbol: 'SNG.BVB',
     type: 'BUY',
     quantity: 1500,
     price: 4.85,
@@ -95,16 +95,16 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Natural gas exposure',
   },
   {
-    symbol: 'SNG',
+    symbol: 'SNG.BVB',
     type: 'BUY',
     quantity: 650,
     price: 5.15,
     date: new Date('2024-05-20').getTime(),
   },
 
-  // H2O - Societatea Energetica Electrica
+  // H2O.BVB - Societatea Energetica Electrica
   {
-    symbol: 'H2O',
+    symbol: 'H2O.BVB',
     type: 'BUY',
     quantity: 80,
     price: 118.00,
@@ -112,43 +112,16 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Utility sector',
   },
   {
-    symbol: 'H2O',
+    symbol: 'H2O.BVB',
     type: 'BUY',
     quantity: 29,
     price: 128.50,
     date: new Date('2024-07-01').getTime(),
   },
 
-  // BVB - Bursa de Valori București
+  // FP.BVB - Fondul Proprietatea
   {
-    symbol: 'BVB',
-    type: 'BUY',
-    quantity: 150,
-    price: 42.50,
-    date: new Date('2024-01-10').getTime(),
-    notes: 'Financial sector',
-  },
-
-  // TVBETETF - BET-TR-AD ETF
-  {
-    symbol: 'TVBETETF',
-    type: 'BUY',
-    quantity: 2000,
-    price: 25.80,
-    date: new Date('2023-12-15').getTime(),
-    notes: 'BET index exposure',
-  },
-  {
-    symbol: 'TVBETETF',
-    type: 'BUY',
-    quantity: 1541,
-    price: 27.50,
-    date: new Date('2024-04-20').getTime(),
-  },
-
-  // FP - Fondul Proprietatea
-  {
-    symbol: 'FP',
+    symbol: 'FP.BVB',
     type: 'BUY',
     quantity: 5000,
     price: 1.85,
@@ -156,24 +129,48 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Diversified holdings',
   },
 
-  // M - MedLife
+  // CSPX.L - iShares Core S&P 500 UCITS ETF (London)
   {
-    symbol: 'M',
+    symbol: 'CSPX.L',
     type: 'BUY',
-    quantity: 400,
-    price: 8.50,
-    date: new Date('2024-03-15').getTime(),
-    notes: 'Healthcare sector',
+    quantity: 10,
+    price: 485.50,
+    date: new Date('2024-01-20').getTime(),
+    notes: 'US market exposure',
+  },
+  {
+    symbol: 'CSPX.L',
+    type: 'BUY',
+    quantity: 8,
+    price: 512.30,
+    date: new Date('2024-04-15').getTime(),
   },
 
-  // SMTL - Samedan Oil & Gas
+  // VWCE.L - Vanguard FTSE All-World UCITS ETF (London)
   {
-    symbol: 'SMTL',
+    symbol: 'VWCE.L',
     type: 'BUY',
-    quantity: 40,
-    price: 57.06,
-    date: new Date('2024-05-01').getTime(),
-    notes: 'Oil & gas sector',
+    quantity: 15,
+    price: 98.75,
+    date: new Date('2024-02-10').getTime(),
+    notes: 'Global diversification',
+  },
+  {
+    symbol: 'VWCE.L',
+    type: 'BUY',
+    quantity: 12,
+    price: 105.20,
+    date: new Date('2024-06-01').getTime(),
+  },
+
+  // VUSA.L - Vanguard S&P 500 UCITS ETF (London)
+  {
+    symbol: 'VUSA.L',
+    type: 'BUY',
+    quantity: 25,
+    price: 78.40,
+    date: new Date('2024-03-01').getTime(),
+    notes: 'S&P 500 tracker',
   },
 ];
 

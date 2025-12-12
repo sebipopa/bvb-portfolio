@@ -2,32 +2,36 @@
 
 > **🤖 AI Vibe Coding Side Project** - Built exploring modern React Native development with AI-assisted coding workflows
 
-A React Native mobile app for tracking Romanian stock market (BVB - Bucharest Stock Exchange) investments with real-time price updates and comprehensive portfolio analytics.
+A React Native mobile app for tracking multi-exchange stock investments with real-time price updates and comprehensive portfolio analytics. Supports Romanian (BVB) and London Stock Exchange (LSE) with more exchanges coming soon.
 
 ## ✨ Features
 
 ### Portfolio Management
+- **Multi-Exchange Support** - Track stocks from BVB (Romanian) and London Stock Exchange in one portfolio
 - **Transaction-based tracking** - Record all BUY/SELL transactions with full history
-- **Real-time price updates** - Live prices scraped from BVB website
+- **Real-time price updates** - Live prices from BVB website and Yahoo Finance API
+- **Multi-currency** - Automatic currency handling (RON for BVB, GBP for London)
 - **Automatic calculations** - Average buy price, gains/losses, and portfolio metrics computed from transaction history
-- **Multi-stock support** - Track unlimited stocks in your portfolio
+- **Unlimited holdings** - Track as many stocks as you want across different exchanges
 
 ### User Interface
 - **📊 Portfolio Overview** - See total value, invested amount, and overall gain/loss at a glance
+- **🏷️ Exchange Badges** - Visual indicators showing which exchange each stock is from (BVB/London)
 - **🔄 Multiple Sort Options** - Sort by value, alphabetically, or create custom order with drag-and-drop
 - **🌐 Bilingual Support** - Full Romanian and English localization
 - **📱 Native Mobile Experience** - Built with React Native and Expo for iOS and Android
 
 ### Stock Details
 - **Transaction History** - View all transactions for each stock with dates and notes
-- **Performance Metrics** - Current price, average buy price, total shares, and P&L
+- **Performance Metrics** - Current price, average buy price, total shares, and P&L with currency
 - **Price Cache** - 1-hour cache for prices with manual refresh option
 - **Quick Actions** - Add transactions or delete holdings directly from detail view
 
 ### Advanced Features
+- **Exchange Selection** - Choose between BVB and London Stock Exchange when adding stocks
 - **Custom Sort Order** - Drag-and-drop to reorder your holdings, persisted across sessions
-- **Demo Data** - Load sample transactions for testing (~20 transactions across 10 BVB stocks)
-- **Smart Caching** - Efficient price fetching with automatic cache management
+- **Demo Data** - Load sample transactions for testing (mix of BVB and London stocks)
+- **Smart Caching** - Efficient price fetching with automatic cache management per exchange
 - **Comprehensive Logging** - Detailed console logs with emoji indicators for debugging
 
 ## 🛠️ Tech Stack
@@ -56,10 +60,17 @@ Instead of storing positions directly, the app records all transactions (BUY/SEL
 - Average buy price (weighted by quantity)
 - Current value and gains/losses
 
-### Price Fetching
-- Web scraping from BVB official website
-- 1-hour cache duration to reduce API calls
+### Multi-Exchange Price Fetching
+**Symbol Format**: `SYMBOL.EXCHANGE` (e.g., `SNG.BVB`, `CSPX.L`)
+
+**Supported Exchanges**:
+- **BVB** (Bucharest Stock Exchange) - Web scraping from official BVB website
+- **L** (London Stock Exchange) - Yahoo Finance API
+
+**Features**:
+- 1-hour cache duration per symbol to reduce API calls
 - Parallel fetching for multiple symbols
+- Automatic currency detection (RON for BVB, GBP for London)
 - Graceful error handling with fallback to cached/zero prices
 
 ### Data Flow
@@ -89,10 +100,22 @@ npm start
 ```
 
 ### Loading Demo Data
-The app includes demo data for testing:
+The app includes multi-exchange demo data for testing:
 - Tap "Load Demo Data" button on empty portfolio
-- Adds ~20 realistic BVB transactions
-- Includes popular stocks: TLV, SNN, SNP, SNG, H2O, BVB, TVBETETF, FP, M, SMTL
+- Adds transactions across both exchanges
+
+**BVB Stocks (Romanian)**:
+- TLV.BVB (Banca Transilvania)
+- SNN.BVB (Nuclearelectrica)
+- SNP.BVB (OMV Petrom)
+- SNG.BVB (Romgaz)
+- H2O.BVB (Hidroelectrica)
+- FP.BVB (Fondul Proprietatea)
+
+**London Stocks**:
+- CSPX.L (iShares Core S&P 500 ETF)
+- VWCE.L (Vanguard FTSE All-World ETF)
+- VUSA.L (Vanguard S&P 500 ETF)
 
 ## 📂 Project Structure
 
@@ -103,13 +126,16 @@ bvb-portfolio/
 │   ├── stock/[symbol].tsx # Stock detail
 │   └── _layout.tsx        # Root layout
 ├── src/
+│   ├── components/        # Reusable UI components
+│   │   └── ExchangeBadge.tsx  # Exchange indicator badge
 │   ├── context/           # React Context providers
 │   ├── hooks/             # Custom React hooks
 │   ├── i18n/              # Localization files (ro/en)
 │   ├── services/          # Business logic
-│   │   ├── bvbApi.ts      # Price fetching & caching
+│   │   ├── marketDataApi.ts       # Multi-exchange price fetching
+│   │   ├── exchangeService.ts     # Exchange parsing & validation
 │   │   ├── transactionService.ts  # Transaction CRUD
-│   │   ├── mockDataService.ts     # Demo data
+│   │   ├── mockDataService.ts     # Multi-exchange demo data
 │   │   └── sortOrderService.ts    # Custom sort persistence
 │   └── types/             # TypeScript definitions
 └── assets/                # Images and static files
@@ -117,11 +143,18 @@ bvb-portfolio/
 
 ## 🔧 Key Services
 
-### BVB API Service
-- Scrapes prices from BVB website
-- 1-hour in-memory cache
-- Parallel fetching support
+### Market Data API Service (`marketDataApi.ts`)
+- **Multi-exchange support**: BVB (web scraping) and London (Yahoo Finance API)
+- **Symbol format**: `SYMBOL.EXCHANGE` (e.g., `SNG.BVB`, `CSPX.L`)
+- 1-hour in-memory cache per symbol
+- Parallel fetching for multiple symbols
+- Automatic currency detection
 - Error handling with zero-price fallback
+
+### Exchange Service (`exchangeService.ts`)
+- Parse and validate symbol format
+- Exchange metadata (name, currency, country code)
+- Symbol formatting utilities
 
 ### Transaction Service
 - Load/save transactions to AsyncStorage

@@ -4,7 +4,7 @@
  *
  * Supports:
  * - BVB (Bucharest Stock Exchange) - web scraping
- * - LSE (London Stock Exchange) - Yahoo Finance API
+ * - LSE (London Stock Exchange) - Twelve Data API
  * - CRYPTO (Cryptocurrency) - CoinGecko API
  */
 
@@ -224,32 +224,30 @@ async function fetchCryptoPrice(symbol: string, fullSymbol: string): Promise<Sto
 
 /**
  * Fetch price from London Stock Exchange
- * Uses Yahoo Finance API (note: may have rate limits or require authentication)
+ * Uses Twelve Data API (free tier: 8 calls/min, 800 calls/day)
+ *
+ * Note: Requires TWELVE_DATA_API_KEY environment variable
+ * Get your free API key at: https://twelvedata.com/pricing
  */
 async function fetchLondonPrice(symbol: string, fullSymbol: string): Promise<StockMarketData> {
   const now = Date.now();
   const exchangeInfo = getExchangeInfo('L');
 
   try {
-    // Yahoo Finance uses .L suffix for London stocks
-    const yahooSymbol = `${symbol}.L`;
-
-    // Use v8 chart API with range parameter
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1d&interval=1d`;
+    // Twelve Data API endpoint for quote (current price)
+    // Symbol format: TICKER (exchange is specified via 'exchange' parameter)
+    const apiKey = process.env.TWELVE_DATA_API_KEY || 'demo';
+    const url = `https://api.twelvedata.com/quote?symbol=${symbol}&exchange=LSE&apikey=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://finance.yahoo.com/',
-        'Origin': 'https://finance.yahoo.com',
       },
     });
 
     if (!response.ok) {
-      console.warn(`⚠️ Yahoo Finance API returned ${response.status} for ${symbol}. Note: Yahoo Finance may block API requests. Consider using manual price entry for London stocks.`);
+      console.warn(`⚠️ Twelve Data API returned ${response.status} for ${symbol}`);
       return {
         symbol: fullSymbol,
         currentPrice: 0,
@@ -260,13 +258,12 @@ async function fetchLondonPrice(symbol: string, fullSymbol: string): Promise<Sto
 
     const data = await response.json();
 
-    // Extract price from Yahoo Finance chart response
-    const result = data?.chart?.result?.[0];
-    const meta = result?.meta;
-    const currentPrice = meta?.regularMarketPrice || meta?.previousClose;
-
-    if (!currentPrice || isNaN(currentPrice) || currentPrice <= 0) {
-      console.warn(`⚠️ Could not extract price from Yahoo Finance for ${symbol}. API may be rate-limited.`);
+    // Check for API error
+    if (data.status === 'error') {
+      console.warn(`⚠️ Twelve Data API error for ${symbol}: ${data.message || 'Unknown error'}`);
+      if (data.code === 429) {
+        console.warn(`💡 Rate limit reached. Free tier: 8 calls/min, 800 calls/day`);
+      }
       return {
         symbol: fullSymbol,
         currentPrice: 0,
@@ -275,17 +272,29 @@ async function fetchLondonPrice(symbol: string, fullSymbol: string): Promise<Sto
       };
     }
 
-    console.log(`✅ Successfully fetched ${yahooSymbol}: ${currentPrice} ${meta?.currency || exchangeInfo.currency}`);
+    // Extract price from Twelve Data quote response
+    const currentPrice = parseFloat(data.close || data.price);
+
+    if (!currentPrice || isNaN(currentPrice) || currentPrice <= 0) {
+      console.warn(`⚠️ Could not extract price from Twelve Data for ${symbol}`);
+      return {
+        symbol: fullSymbol,
+        currentPrice: 0,
+        currency: exchangeInfo.currency,
+        lastUpdate: now,
+      };
+    }
+
+    console.log(`✅ Successfully fetched ${symbol} (LSE): ${currentPrice} ${data.currency || 'USD'}`);
 
     return {
       symbol: fullSymbol,
       currentPrice,
-      currency: meta?.currency || exchangeInfo.currency,
+      currency: data.currency || 'USD',
       lastUpdate: now,
     };
   } catch (error) {
     console.error(`❌ Error fetching London price for ${symbol}:`, error);
-    console.warn(`💡 Tip: Yahoo Finance API has rate limits. You can manually enter prices or use a different data provider.`);
     return {
       symbol: fullSymbol,
       currentPrice: 0,

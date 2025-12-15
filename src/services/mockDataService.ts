@@ -146,9 +146,10 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     date: new Date('2024-04-15').getTime(),
   },
 
-  // VWCE.L - Vanguard FTSE All-World UCITS ETF (London)
+  // VWRA.L - Vanguard FTSE All-World UCITS ETF (London)
+  // Note: VWCE is the Xetra symbol, VWRA is the LSE symbol
   {
-    symbol: 'VWCE.L',
+    symbol: 'VWRA.L',
     type: 'BUY',
     quantity: 15,
     price: 98.75,
@@ -156,7 +157,7 @@ const mockTransactionsData: Omit<Transaction, 'id'>[] = [
     notes: 'Global diversification',
   },
   {
-    symbol: 'VWCE.L',
+    symbol: 'VWRA.L',
     type: 'BUY',
     quantity: 12,
     price: 105.20,

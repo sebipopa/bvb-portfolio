@@ -10,6 +10,7 @@
 
 import { StockMarketData } from '../types/Stock';
 import { parseSymbol, getExchangeInfo, ExchangeCode } from './exchangeService';
+import Constants from 'expo-constants';
 
 // Cache for storing prices with 1-hour expiry (3600000 ms)
 const CACHE_DURATION = 3600000; // 1 hour
@@ -236,7 +237,7 @@ async function fetchLondonPrice(symbol: string, fullSymbol: string): Promise<Sto
   try {
     // Twelve Data API endpoint for quote (current price)
     // Symbol format: TICKER (exchange is specified via 'exchange' parameter)
-    const apiKey = process.env.TWELVE_DATA_API_KEY || 'demo';
+    const apiKey = Constants.expoConfig?.extra?.TWELVE_DATA_API_KEY || 'demo';
     const url = `https://api.twelvedata.com/quote?symbol=${symbol}&exchange=LSE&apikey=${apiKey}`;
 
     const response = await fetch(url, {

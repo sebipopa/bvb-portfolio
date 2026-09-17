@@ -9,7 +9,7 @@ A React Native mobile app for tracking multi-exchange stock investments with rea
 ### Portfolio Management
 - **Multi-Exchange Support** - Track stocks from BVB (Romanian) and London Stock Exchange in one portfolio
 - **Transaction-based tracking** - Record all BUY/SELL transactions with full history
-- **Real-time price updates** - Live prices from BVB website and Yahoo Finance API
+- **Price updates** - Quotes for BVB (15-min delayed), London and crypto from a shared provider layer, optionally cached by a free Cloudflare Worker
 - **Multi-currency** - Automatic currency handling (RON for BVB, GBP for London)
 - **Automatic calculations** - Average buy price, gains/losses, and portfolio metrics computed from transaction history
 - **Unlimited holdings** - Track as many stocks as you want across different exchanges
@@ -24,7 +24,7 @@ A React Native mobile app for tracking multi-exchange stock investments with rea
 ### Stock Details
 - **Transaction History** - View all transactions for each stock with dates and notes
 - **Performance Metrics** - Current price, average buy price, total shares, and P&L with currency
-- **Price Cache** - 1-hour cache for prices with manual refresh option
+- **Price Cache** - 15-minute cache for prices with manual refresh option; the last known price is kept if a refresh fails
 - **Quick Actions** - Add transactions or delete holdings directly from detail view
 
 ### Advanced Features
@@ -64,14 +64,16 @@ Instead of storing positions directly, the app records all transactions (BUY/SEL
 **Symbol Format**: `SYMBOL.EXCHANGE` (e.g., `SNG.BVB`, `CSPX.L`)
 
 **Supported Exchanges**:
-- **BVB** (Bucharest Stock Exchange) - Web scraping from official BVB website
-- **L** (London Stock Exchange) - Yahoo Finance API
+- **BVB** (Bucharest Stock Exchange) - 15-minute delayed quotes in RON
+- **L** (London Stock Exchange) - streaming quotes; currency per instrument (CSPX trades in USD, VUSA in GBP, pence are converted to GBP)
+- **CRYPTO** - streaming quotes in USD
 
-**Features**:
-- 1-hour cache duration per symbol to reduce API calls
-- Parallel fetching for multiple symbols
-- Automatic currency detection (RON for BVB, GBP for London)
-- Graceful error handling with fallback to cached/zero prices
+**How prices are fetched** (`src/services/providers/`):
+- TradingView's scanner endpoint answers every symbol in one request; Yahoo Finance is the fallback per symbol
+- The same provider code runs inside `worker/`, a Cloudflare Worker that caches quotes in KV and refreshes them every 15 minutes
+- Set `EXPO_PUBLIC_PRICE_API_URL` in `.env` to use your deployed worker; leave it empty and the app calls the providers directly
+- 15-minute in-memory cache in the app, one request per refresh for all uncached symbols
+- Both upstreams are unofficial and their terms forbid commercial use: fine for a personal app, swap in a licensed feed (e.g. EODHD) before a store release
 
 ### Data Flow
 ```
@@ -95,8 +97,22 @@ git clone https://github.com/sebipopa/bvb-portfolio.git
 cd bvb-portfolio
 npm install
 
+# Run the unit tests (providers, symbol mapping, worker handlers; no network needed)
+npm test
+
 # Start the development server
 npm start
+```
+
+### Optional: price worker
+Without any configuration the app fetches quotes directly from the providers.
+To share one cache between devices and keep phones off the upstream rate limits,
+deploy the Cloudflare Worker in `worker/` (free tier, see `worker/README.md`) and put
+its URL in `.env`:
+
+```bash
+cp .env.example .env
+# EXPO_PUBLIC_PRICE_API_URL=https://bvb-portfolio-prices.<you>.workers.dev
 ```
 
 ### Loading Demo Data
@@ -144,12 +160,16 @@ bvb-portfolio/
 ## 🔧 Key Services
 
 ### Market Data API Service (`marketDataApi.ts`)
-- **Multi-exchange support**: BVB (web scraping) and London (Yahoo Finance API)
-- **Symbol format**: `SYMBOL.EXCHANGE` (e.g., `SNG.BVB`, `CSPX.L`)
-- 1-hour in-memory cache per symbol
-- Parallel fetching for multiple symbols
-- Automatic currency detection
-- Error handling with zero-price fallback
+- **Symbol format**: `SYMBOL.EXCHANGE` (e.g., `SNG.BVB`, `CSPX.L`, `BTC.CRYPTO`)
+- One batched request per refresh, via the worker (`EXPO_PUBLIC_PRICE_API_URL`) or directly via `providers/`
+- 15-minute in-memory cache; stale entries keep the last known price as fallback
+- Currency taken from each quote, exchange default only when a price is unavailable
+
+### Price Providers (`providers/`) and Worker (`worker/`)
+- `providers/tradingview.ts` (primary, all markets in one call) and `providers/yahoo.ts` (fallback)
+- `symbols.ts` maps app symbols to provider tickers and normalises pence/USDT
+- `worker/` deploys the same providers as a Cloudflare Worker with KV cache and cron; see `worker/README.md`
+- Unit tests for all of the above: `npm test`
 
 ### Exchange Service (`exchangeService.ts`)
 - Parse and validate symbol format
@@ -210,9 +230,8 @@ Contributions welcome! Please feel free to submit a Pull Request.
 
 ## 🐛 Known Limitations
 
-- Prices are scraped from BVB website (no official API available)
-- Web scraping may break if BVB changes their HTML structure
-- Limited to BVB (Bucharest Stock Exchange) stocks only
+- Price sources (TradingView, Yahoo) are unofficial; they can change without notice and are for personal use only
+- BVB quotes are 15 minutes delayed
 - No cloud sync (local storage only)
 
 ## 🔮 Future Enhancements

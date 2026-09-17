@@ -44,9 +44,6 @@ module.exports = {
     experiments: {
       typedRoutes: true,
       reactCompiler: true
-    },
-    extra: {
-      TWELVE_DATA_API_KEY: process.env.TWELVE_DATA_API_KEY || "077fe23753e143b78f15481ead2612c6"
     }
   }
 };

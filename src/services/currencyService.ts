@@ -2,7 +2,7 @@
  * Currency Service
  * Handles currency conversion and exchange rate fetching
  *
- * Uses frankfurter.app (free, no API key required)
+ * Uses frankfurter.dev (free, no API key required)
  * Caches rates for 24 hours
  */
 
@@ -31,8 +31,9 @@ async function fetchExchangeRates(): Promise<ExchangeRates> {
   try {
     console.log('💱 Fetching exchange rates...');
 
-    // Fetch rates with EUR as base, include RON, USD, EUR
-    const url = 'https://api.frankfurter.app/latest?from=EUR&to=RON,USD,EUR';
+    // Fetch rates with EUR as base, include RON, USD, GBP (EUR is added below)
+    // GBP is needed for LSE holdings quoted in pounds.
+    const url = 'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=RON,USD,GBP';
 
     const response = await fetch(url, {
       method: 'GET',
@@ -61,7 +62,7 @@ async function fetchExchangeRates(): Promise<ExchangeRates> {
     await AsyncStorage.setItem(RATES_CACHE_KEY, JSON.stringify(rates));
     ratesCache = rates;
 
-    console.log(`✅ Exchange rates fetched: 1 EUR = ${rates.rates.RON} RON, ${rates.rates.USD} USD`);
+    console.log(`✅ Exchange rates fetched: 1 EUR = ${rates.rates.RON} RON, ${rates.rates.USD} USD, ${rates.rates.GBP} GBP`);
     return rates;
   } catch (error) {
     console.error('❌ Error fetching exchange rates:', error);

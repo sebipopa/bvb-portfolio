@@ -1,0 +1,12 @@
+name = "bvb-portfolio-prices"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+# Refresh every tracked symbol every 15 minutes (96 KV writes/day, free tier allows 1000).
+[triggers]
+crons = ["*/15 * * * *"]
+
+# Create with: npx wrangler kv namespace create PRICES   (then paste the id below)
+[[kv_namespaces]]
+binding = "PRICES"
+id = "REPLACE_WITH_ID_FROM_wrangler_kv_namespace_create_PRICES"

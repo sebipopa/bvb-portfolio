@@ -53,7 +53,8 @@ export async function fetchTradingViewQuotes(
   try {
     const response = await fetchFn(TRADINGVIEW_SCAN_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'User-Agent': USER_AGENT },
+      // text/plain is a CORS "simple" content type: no preflight, so the web build can call this too.
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8', 'User-Agent': USER_AGENT },
       body: JSON.stringify({ symbols: { tickers }, columns: COLUMNS }),
     });
     if (!response.ok) {

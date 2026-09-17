@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../tradingview', () => ({ fetchTradingViewQuotes: vi.fn() }));
-vi.mock('../yahoo', () => ({ fetchYahooQuotes: vi.fn() }));
-
 import { fetchTradingViewQuotes } from '../tradingview';
 import { fetchYahooQuotes } from '../yahoo';
 import { fetchQuotes } from '..';
+
+// vitest hoists vi.mock above the imports, so the modules under test see the fakes.
+vi.mock('../tradingview', () => ({ fetchTradingViewQuotes: vi.fn() }));
+vi.mock('../yahoo', () => ({ fetchYahooQuotes: vi.fn() }));
 
 const tv = vi.mocked(fetchTradingViewQuotes);
 const yh = vi.mocked(fetchYahooQuotes);

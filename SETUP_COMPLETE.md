@@ -361,7 +361,7 @@ This is a **production-ready starting point** with:
 - **Expo Docs**: https://docs.expo.dev/
 - **React Native**: https://reactnative.dev/
 - **TypeScript**: https://www.typescriptlang.org/docs/
-- **BVB Website**: https://www.bvb.ro/
+- **BVB Website**: https://www.bvb.ro/ (prices come from TradingView/Yahoo via `src/services/providers/`, see README)
 
 ---
 

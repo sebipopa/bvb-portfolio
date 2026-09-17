@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../providers', () => ({ fetchQuotes: vi.fn() }));
-
 import { fetchQuotes } from '../providers';
 import { clearPriceCache, getCachedTimestamp, getStockPrice, getStockPrices } from '../marketDataApi';
+
+// vitest hoists vi.mock above the imports, so the modules under test see the fakes.
+vi.mock('../providers', () => ({ fetchQuotes: vi.fn() }));
 
 const direct = vi.mocked(fetchQuotes);
 const q = (symbol: string, price: number, currency = 'RON') => ({

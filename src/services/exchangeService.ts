@@ -34,7 +34,7 @@ export const EXCHANGES: Record<ExchangeCode, ExchangeInfo> = {
   L: {
     code: 'L',
     name: 'London Stock Exchange',
-    currency: 'USD', // Yahoo Finance returns prices in USD
+    currency: 'GBP', // fallback only: the real currency comes with each quote (CSPX trades in USD, VUSA in GBP)
     countryCode: 'GB',
   },
   CRYPTO: {

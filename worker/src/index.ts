@@ -2,7 +2,7 @@
  * Cloudflare Worker entry point.
  *   GET /prices?symbols=TLV.BVB,CSPX.L  -> { quotes, errors }
  *   GET /health                          -> { ok: true }
- *   cron */15                            -> refresh every tracked symbol
+ *   cron (every 15 min)                  -> refresh every tracked symbol
  */
 
 import { handlePrices, json, PriceEnv, refreshAll } from './handlers';

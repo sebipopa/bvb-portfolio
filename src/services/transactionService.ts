@@ -5,7 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Transaction } from '../types/Stock';
-import { parseSymbol, isValidSymbolFormat } from './exchangeService';
+import { parseSymbol, isValidSymbolFormat, formatSymbol } from './exchangeService';
 import portfolio from '../../assets/portfolio.json';
 
 const TRANSACTIONS_KEY = '@portfolio_transactions';
@@ -147,9 +147,10 @@ export async function getTransactionsBySymbol(symbol: string): Promise<Transacti
  */
 export function migrateFromPortfolio(): Transaction[] {
   const now = Date.now();
-  return portfolio.map((item, index) => ({
+  // portfolio.json predates multi-exchange support: bare tickers are BVB.
+  return portfolio.map((item) => ({
     id: generateId(),
-    symbol: item.symbol.toUpperCase(),
+    symbol: item.symbol.includes('.') ? item.symbol.toUpperCase() : formatSymbol(item.symbol, 'BVB'),
     type: 'BUY' as const,
     quantity: item.shares,
     price: item.avgBuyPrice,
